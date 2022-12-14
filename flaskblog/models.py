@@ -1,7 +1,7 @@
 from datetime import datetime
 from itsdangerous import URLSafeTimedSerializer as Serializer
-from itsdangerous.encoding import base64_encode as encode
-from flaskblog import db, login_manager, app # jws
+from flask import current_app
+from flaskblog import db, login_manager
 from flask_login import UserMixin
 
 
@@ -18,20 +18,14 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(60), nullable=False)
     posts = db.relationship('Post', backref='author', lazy=True)
 
-    # def get_reset_token(self):
-    #     protected = {'alg': 'HS256'}
-    #     payload = {'user_id': self.id}.decode('utf-8')
-    #     secret = app.config['SECRET_KEY']
-    #     token = jws.serialize_compact(protected, payload, secret)
-    #     return token
 
     def get_reset_token(self):
-        s = Serializer(app.config['SECRET_KEY'])
+        s = Serializer(current_app.config['SECRET_KEY'])
         return s.dumps({'user_id': self.id}).encode('utf-8')
 
     @staticmethod
     def verify_reset_token(token):
-        s = Serializer(app.config['SECRET_KEY'])
+        s = Serializer(current_app.config['SECRET_KEY'])
         try:
             user_id = s.loads(token)['user_id']
         except:
